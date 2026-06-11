@@ -1,3 +1,7 @@
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-11 at 14 05 35" src="https://github.com/user-attachments/assets/5d068016-b985-4c4b-aa39-07b1c8179ef3" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-11 at 14 05 47" src="https://github.com/user-attachments/assets/4d332040-f6a9-494e-a475-26e40148639a" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-11 at 14 05 47 (1)" src="https://github.com/user-attachments/assets/619ab539-f7e3-4bef-b048-e4b30dcd948f" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-11 at 14 05 39" src="https://github.com/user-attachments/assets/2841e993-8d0f-4927-91b5-88b07171a0b7" />
 # 📝 Notes+ — Reminders, Habits & Wellness Tracker
 
 A personal reminders, habit & wellness tracking app — built as a **Progressive Web App** with pure HTML/CSS/JavaScript, then converted to a **native Android app** using **Capacitor + Node.js**. 💗
