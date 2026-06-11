@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#e8649a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Notes+">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Notes+</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#fdf0f5;--surface:#fff5f9;--card:#ffffff;--border:#f5c6dc;
+  --accent:#e8649a;--accent2:#c94080;--text:#3d1a2e;--muted:#b07090;
+  --green:#5cb88a;--yellow:#f0a84e;--red:#e05c7a;--pink:#e8649a;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 0%,#fce4ef 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,#f9d5e8 0%,transparent 55%);
+  background-attachment:fixed;}
+#app-shell{max-width:100%;margin:0 auto;}
+@media(min-width:700px){
+  body{display:flex;align-items:flex-start;justify-content:center;}
+  #app-shell{display:grid;grid-template-columns:240px 1fr;max-width:1060px;width:100%;min-height:100vh;}
+  #sidebar{display:flex!important;flex-direction:column;padding:32px 20px;border-right:1.5px solid var(--border);
+    background:rgba(255,245,249,.8);backdrop-filter:blur(10px);position:sticky;top:0;height:100vh;overflow-y:auto;}
+  #app{max-width:100%;padding-bottom:40px;}
+  .topbar{border-radius:0;max-width:100%;}
+  .tabs{display:none!important;}
+  .page{padding:20px 28px;}
+  .modal{border-radius:20px;margin:auto;}
+  .modal-overlay.open{align-items:center;}
+  .form-card{max-width:700px;}
+}
+@media(max-width:699px){
+  #app-shell{max-width:430px;margin:0 auto;}
+  #sidebar{display:none;}
+}
+#app{display:block;padding-bottom:90px;}
+.topbar{background:rgba(255,245,249,.92);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;
+  align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);}
+.app-logo{font-size:22px;font-weight:700;letter-spacing:-.5px;cursor:default;user-select:none;}
+.app-logo span{color:var(--accent);}
+.topbar-btns{display:flex;gap:8px;}
+.icon-btn{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;}
+.notif-status{font-size:10px;color:var(--muted);text-align:center;padding:6px 16px 0;}
+.notif-status.granted{color:var(--green);}
+.notif-status.denied{color:var(--red);}
+.tabs{display:flex;overflow-x:auto;gap:6px;padding:12px 16px 0;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{background:rgba(255,255,255,.7);border:1.5px solid var(--border);border-radius:20px;padding:8px 16px;
+  font-size:13px;white-space:nowrap;cursor:pointer;color:var(--muted);transition:.2s;flex-shrink:0;}
+.tab.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;box-shadow:0 3px 12px rgba(232,100,154,.35);}
+.page{display:none;padding:16px;}
+.page.active{display:block;}
+.section-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:16px 0 10px;}
+.reminder-card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:14px 16px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:12px;box-shadow:0 2px 8px rgba(232,100,154,.08);}
+.r-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.r-body{flex:1;min-width:0;}
+.r-alias{font-size:14px;font-weight:600;color:var(--text);}
+.r-badge{font-size:11px;color:var(--muted);margin-top:3px;}
+.r-time{font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;}
+.r-repeat{font-size:10px;border-radius:8px;padding:2px 8px;display:inline-block;margin-top:5px;color:var(--accent2);
+  background:rgba(232,100,154,.1);}
+.r-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;flex-shrink:0;}
+.form-card{background:rgba(255,255,255,.85);border:1.5px solid var(--border);border-radius:20px;padding:18px;margin-bottom:16px;
+  box-shadow:0 2px 12px rgba(232,100,154,.08);}
+.form-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block;}
+.form-input,.form-select{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);
+  font-size:14px;padding:11px 14px;outline:none;transition:.2s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,100,154,.15);}
+.form-select option{background:var(--surface);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-group{margin-bottom:14px;}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;border:none;
+  border-radius:14px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;margin-top:4px;
+  box-shadow:0 4px 14px rgba(232,100,154,.35);}
+.btn-primary:active{transform:scale(.97);box-shadow:0 2px 6px rgba(232,100,154,.2);}
+.insights-hero{background:linear-gradient(135deg,#f9a8cc,#e8649a);border-radius:22px;padding:22px;margin-bottom:16px;
+  text-align:center;box-shadow:0 6px 20px rgba(232,100,154,.3);}
+.insights-hero h2{font-size:20px;font-weight:700;color:white;}
+.insights-hero p{font-size:13px;opacity:.9;margin-top:6px;color:white;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-box{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;text-align:center;}
+.stat-num{font-size:28px;font-weight:700;color:var(--accent);}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.8px;}
+.log-btn{background:rgba(255,255,255,.9);border:1.5px solid var(--border);border-radius:14px;color:var(--accent2);
+  padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-bottom:10px;transition:.2s;
+  text-align:left;display:flex;align-items:center;gap:10px;}
+.log-btn:active{background:var(--accent);color:white;}
+.cal-wrap{padding:4px 0;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-header h3{font-size:15px;font-weight:700;}
+.cal-nav{background:rgba(232,100,154,.12);border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:5px 10px;border-radius:10px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dn{font-size:10px;color:var(--muted);text-align:center;padding:5px 0;font-weight:700;letter-spacing:.3px;}
+.cal-d{font-size:13px;text-align:center;border-radius:9px;cursor:pointer;transition:.15s;width:100%;padding:8px 2px;
+  display:flex;align-items:center;justify-content:center;font-weight:500;min-height:34px;line-height:1;}
+.cal-d.marked{background:linear-gradient(135deg,#f9a8cc,var(--accent));color:white;font-weight:700;box-shadow:0 2px 6px rgba(232,100,154,.3);}
+.cal-d.predicted{background:rgba(232,100,154,.18);color:var(--accent);font-weight:600;}
+.cal-d.today{outline:2px solid var(--accent);outline-offset:-2px;font-weight:700;color:var(--accent);}
+.cal-d.empty{pointer-events:none;}
+.modal-overlay{position:fixed;inset:0;background:rgba(61,26,46,.5);z-index:100;display:none;
+  align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:28px 28px 0 0;padding:24px 20px 44px;width:100%;max-width:430px;
+  max-height:88vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(232,100,154,.2);}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:18px;color:var(--text);}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.chip{background:rgba(255,255,255,.8);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;
+  font-size:13px;cursor:pointer;transition:.2s;color:var(--muted);}
+.chip.selected{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 2px 8px rgba(232,100,154,.3);}
+.event-item{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;
+  display:flex;gap:12px;align-items:flex-start;box-shadow:0 2px 8px rgba(232,100,154,.07);}
+.event-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.event-dot.yellow{background:var(--yellow);}
+.note-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;
+  box-shadow:0 2px 8px rgba(232,100,154,.07);}
+.note-date{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.note-text{font-size:14px;line-height:1.5;}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green);color:white;font-size:13px;
+  font-weight:700;border-radius:20px;padding:10px 22px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px;}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+.notif-banner{background:rgba(232,100,154,.1);border:1.5px solid var(--border);border-radius:16px;padding:12px 16px;
+  margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:10px;}
+.notif-banner button{background:var(--accent);border:none;color:white;border-radius:10px;padding:6px 14px;font-size:12px;
+  font-weight:600;cursor:pointer;flex-shrink:0;}
+.sidebar-tab{background:none;border:none;border-radius:14px;color:var(--muted);font-size:14px;font-weight:500;
+  padding:11px 16px;cursor:pointer;text-align:left;width:100%;transition:.2s;}
+.sidebar-tab:hover{background:rgba(232,100,154,.08);color:var(--text);}
+.sidebar-tab.active{background:linear-gradient(135deg,rgba(232,100,154,.15),rgba(201,64,128,.1));color:var(--accent2);font-weight:700;}
+/* install banner */
+.install-banner{background:linear-gradient(135deg,rgba(232,100,154,.12),rgba(201,64,128,.08));border:1.5px solid var(--border);
+  border-radius:16px;padding:12px 16px;margin:8px 16px;font-size:13px;display:flex;align-items:center;gap:10px;}
+.install-banner button.inst{background:var(--accent);border:none;color:white;border-radius:10px;padding:6px 14px;
+  font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;}
+.install-banner button.close-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;}
+/* dark theme */
+body.dark{--bg:#1a0d14;--surface:#2a1520;--card:#221018;--border:#4a2035;--text:#f5dde8;--muted:#a06080;}
+body.dark .tab:not(.active){background:rgba(40,20,30,.7);}
+body.dark .form-input,body.dark .form-select{background:var(--surface);color:var(--text);}
+body.dark .chip:not(.selected){background:rgba(40,20,30,.8);color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div id="app-shell">
+
+<!-- DESKTOP SIDEBAR -->
+<div id="sidebar" style="display:none;">
+  <div style="font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--text);margin-bottom:6px;">Notes<span style="color:var(--accent)">+</span></div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:32px;">Your personal space ✨</div>
+  <nav style="display:flex;flex-direction:column;gap:6px;">
+    <button class="sidebar-tab active" onclick="switchTab('reminders',this)" data-tab="reminders">⏰ Reminders</button>
+    <button class="sidebar-tab" onclick="switchTab('insights',this)" data-tab="insights">📊 Habit Insights</button>
+    <button class="sidebar-tab" onclick="switchTab('events',this)" data-tab="events">📅 Events</button>
+    <button class="sidebar-tab" onclick="switchTab('notes',this)" data-tab="notes">📝 Notes</button>
+  </nav>
+  <div style="margin-top:auto;padding-top:24px;border-top:1px solid var(--border);">
+    <button onclick="requestNotifPermission()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;padding:8px 0;">🔔 Notifications</button>
+    <button onclick="toggleTheme()" id="themeToggleSidebar" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;padding:8px 0;">🌙 Dark Mode</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="app-logo">Notes<span>+</span></div>
+    <div class="topbar-btns">
+      <button class="icon-btn" id="notifBtn" onclick="requestNotifPermission()" title="Enable notifications">🔔</button>
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    </div>
+  </div>
+  <div class="notif-status" id="notifStatus"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="reminders" onclick="switchTab('reminders',this)">⏰ Reminders</div>
+    <div class="tab" data-tab="insights" onclick="switchTab('insights',this)">📊 Habits</div>
+    <div class="tab" data-tab="events" onclick="switchTab('events',this)">📅 Events</div>
+    <div class="tab" data-tab="notes" onclick="switchTab('notes',this)">📝 Notes</div>
+  </div>
+
+  <!-- ── REMINDERS PAGE ── -->
+  <div class="page active" id="page-reminders">
+    <div id="notifBanner" style="display:none;" class="notif-banner">
+      🔔 <span>Enable notifications so your reminders actually alert you</span>
+      <button onclick="requestNotifPermission()">Allow</button>
+    </div>
+
+    <div class="section-title">Add Reminder</div>
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">What to remind you (private)</label>
+        <input class="form-input" id="r-actual" placeholder="e.g. Study session, drink water…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notification Title (shown on phone)</label>
+        <input class="form-input" id="r-title" placeholder="e.g. Time to study!">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notification Message</label>
+        <input class="form-input" id="r-msg" placeholder="e.g. Don't forget your goal for today">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="r-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time ⏰</label>
+          <input class="form-input" type="time" id="r-time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">End Date</label>
+          <input class="form-input" type="date" id="r-end">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Repeat</label>
+          <select class="form-select" id="r-repeat">
+            <option value="once">Once</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addReminder()">＋ Save Reminder</button>
+    </div>
+    <div class="section-title">Your Reminders</div>
+    <div id="reminderList"></div>
+  </div>
+
+  <!-- ── INSIGHTS PAGE ── -->
+  <div class="page" id="page-insights">
+    <div class="insights-hero">
+      <h2>📊 Habit Insights</h2>
+      <p>Consistency Dashboard &amp; Daily Analytics</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">🌟 Habits</div>
+        <div style="text-align:center;margin-bottom:10px;">
+          <div style="font-size:28px;font-weight:700;color:var(--accent2);" id="habit-streak-num">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Day Streak</div>
+        </div>
+        <div style="text-align:center;margin-bottom:10px;">
+          <div style="font-size:22px;font-weight:700;color:var(--green);" id="habit-total-num">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Total Logged</div>
+        </div>
+        <button class="log-btn" style="font-size:12px;padding:9px 10px;margin-bottom:6px;" onclick="openModal('habitModal')">✅ Log Today</button>
+        <button class="log-btn" style="font-size:12px;padding:9px 10px;" onclick="openModal('noteModal')">📝 Daily Note</button>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">🌸 Wellness</div>
+        <div style="text-align:center;margin-bottom:8px;">
+          <div style="font-size:22px;font-weight:700;color:var(--accent2);" id="stat-tracked">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Tracked Days</div>
+        </div>
+        <div style="text-align:center;margin-bottom:8px;">
+          <div style="font-size:18px;font-weight:700;color:var(--accent2);" id="stat-next">—</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Next Expected</div>
+        </div>
+        <button class="log-btn" style="font-size:12px;padding:9px 10px;margin-bottom:6px;" onclick="openModal('startModal')">🔴 Log Start</button>
+        <button class="log-btn" style="font-size:12px;padding:9px 10px;" onclick="openModal('endModal')">🟢 Log End</button>
+      </div>
+    </div>
+    <span id="stat-cycle" style="display:none">—</span>
+    <span id="stat-duration" style="display:none">—</span>
+    <div class="section-title">Monthly Calendar</div>
+    <div class="form-card" id="calendarBox"></div>
+    <div class="section-title">Recent Wellness Log</div>
+    <div id="cycleLog"></div>
+  </div>
+
+  <!-- ── EVENTS PAGE ── -->
+  <div class="page" id="page-events">
+    <div class="section-title">Add Important Event</div>
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">Event Name</label>
+        <input class="form-input" id="ev-name" placeholder="e.g. Doctor appointment">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="ev-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <input class="form-input" type="time" id="ev-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <input class="form-input" id="ev-note" placeholder="Optional details">
+      </div>
+      <button class="btn-primary" onclick="addEvent()">＋ Add Event</button>
+    </div>
+    <div class="section-title">Upcoming Events</div>
+    <div id="eventList"></div>
+  </div>
+
+  <!-- ── NOTES PAGE ── -->
+  <div class="page" id="page-notes">
+    <div class="section-title">New Note</div>
+    <div class="form-card">
+      <div class="form-group">
+        <textarea class="form-input" id="note-text" rows="4" placeholder="Write anything… thoughts, reminders, ideas 🌸" style="resize:none;"></textarea>
+      </div>
+      <button class="btn-primary" onclick="addNote()">＋ Save Note</button>
+    </div>
+    <div class="section-title">Saved Notes</div>
+    <div id="noteList"></div>
+  </div>
+
+</div><!-- /app -->
+</div><!-- /app-shell -->
+
+<!-- ── CYCLE MODALS ── -->
+<div class="modal-overlay" id="startModal">
+  <div class="modal">
+    <div class="modal-title">🔴 Log Cycle Start</div>
+    <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" type="date" id="m-start-date"></div>
+    <div class="form-group">
+      <label class="form-label">Mood</label>
+      <div class="chip-row" id="start-mood">
+        <div class="chip" onclick="toggleChip(this)">😊 Good</div>
+        <div class="chip" onclick="toggleChip(this)">😐 Okay</div>
+        <div class="chip" onclick="toggleChip(this)">😔 Low</div>
+        <div class="chip" onclick="toggleChip(this)">😤 Irritable</div>
+        <div class="chip" onclick="toggleChip(this)">😰 Anxious</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Symptoms</label>
+      <div class="chip-row" id="start-sym">
+        <div class="chip" onclick="toggleChip(this)">Cramps</div>
+        <div class="chip" onclick="toggleChip(this)">Bloating</div>
+        <div class="chip" onclick="toggleChip(this)">Headache</div>
+        <div class="chip" onclick="toggleChip(this)">Fatigue</div>
+        <div class="chip" onclick="toggleChip(this)">Back pain</div>
+        <div class="chip" onclick="toggleChip(this)">Nausea</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Flow Level</label>
+      <div class="chip-row" id="start-flow">
+        <div class="chip" onclick="selectOne('start-flow',this)">Light</div>
+        <div class="chip" onclick="selectOne('start-flow',this)">Medium</div>
+        <div class="chip" onclick="selectOne('start-flow',this)">Heavy</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="m-start-note" placeholder="Anything else…"></div>
+    <button class="btn-primary" onclick="saveStart()">Save</button>
+    <button style="width:100%;background:none;border:none;color:var(--muted);margin-top:10px;padding:10px;cursor:pointer;font-size:14px;" onclick="closeModal('startModal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="endModal">
+  <div class="modal">
+    <div class="modal-title">🟢 Log Cycle End</div>
+    <div class="form-group"><label class="form-label">End Date</label><input class="form-input" type="date" id="m-end-date"></div>
+    <div class="form-group">
+      <label class="form-label">Overall this cycle</label>
+      <div class="chip-row" id="end-mood">
+        <div class="chip" onclick="toggleChip(this)">Manageable</div>
+        <div class="chip" onclick="toggleChip(this)">Tough</div>
+        <div class="chip" onclick="toggleChip(this)">Fine</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="m-end-note" placeholder="Anything to remember…"></div>
+    <button class="btn-primary" onclick="saveEnd()">Save</button>
+    <button style="width:100%;background:none;border:none;color:var(--muted);margin-top:10px;padding:10px;cursor:pointer;font-size:14px;" onclick="closeModal('endModal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-title">📝 Today's Status Log</div>
+    <div class="form-group">
+      <label class="form-label">Energy Level</label>
+      <div class="chip-row" id="note-energy">
+        <div class="chip" onclick="selectOne('note-energy',this)">⚡ High</div>
+        <div class="chip" onclick="selectOne('note-energy',this)">〰️ Medium</div>
+        <div class="chip" onclick="selectOne('note-energy',this)">🪫 Low</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mood</label>
+      <div class="chip-row" id="note-mood">
+        <div class="chip" onclick="toggleChip(this)">😊 Happy</div>
+        <div class="chip" onclick="toggleChip(this)">😐 Neutral</div>
+        <div class="chip" onclick="toggleChip(this)">😔 Sad</div>
+        <div class="chip" onclick="toggleChip(this)">😤 Irritable</div>
+        <div class="chip" onclick="toggleChip(this)">😰 Anxious</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Personal Notes</label><textarea class="form-input" id="m-daily-note" rows="3" placeholder="Any symptoms, thoughts, or reminders…" style="resize:none;"></textarea></div>
+    <button class="btn-primary" onclick="saveDailyNote()">Save Log</button>
+    <button style="width:100%;background:none;border:none;color:var(--muted);margin-top:10px;padding:10px;cursor:pointer;font-size:14px;" onclick="closeModal('noteModal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="habitModal">
+  <div class="modal">
+    <div class="modal-title">✅ Log Today's Habits</div>
+    <div class="form-group">
+      <label class="form-label">Which habits did you complete?</label>
+      <div class="chip-row" id="habit-chips">
+        <div class="chip" onclick="toggleChip(this)">💧 Hydration</div>
+        <div class="chip" onclick="toggleChip(this)">🏃 Exercise</div>
+        <div class="chip" onclick="toggleChip(this)">📚 Study</div>
+        <div class="chip" onclick="toggleChip(this)">🧘 Mindfulness</div>
+        <div class="chip" onclick="toggleChip(this)">😴 Good Sleep</div>
+        <div class="chip" onclick="toggleChip(this)">🥗 Healthy Eating</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Overall Mood Today</label>
+      <div class="chip-row" id="habit-mood">
+        <div class="chip" onclick="selectOne('habit-mood',this)">😊 Great</div>
+        <div class="chip" onclick="selectOne('habit-mood',this)">😐 Okay</div>
+        <div class="chip" onclick="selectOne('habit-mood',this)">😔 Low</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveHabitLog()">Save Habits</button>
+    <button style="width:100%;background:none;border:none;color:var(--muted);margin-top:10px;padding:10px;cursor:pointer;font-size:14px;" onclick="closeModal('habitModal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+let calViewDate = new Date();
+
+let data = JSON.parse(localStorage.getItem('notesplus_v3') || 'null') || {
+  reminders: [], cycles: [], events: [], notes: [], dailyLogs: [], habitLogs: []
+};
+if (!data.habitLogs) data.habitLogs = [];
+
+// Seed cycle data if empty
+if (!data.cycles.length) {
+  let now = new Date();
+  for (let i = 2; i >= 0; i--) {
+    let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    let y = d.getFullYear(), m = d.getMonth();
+    let maxDay = new Date(y, m + 1, 0).getDate();
+    let endDay = Math.min(maxDay, (Math.random() > .5) ? 29 : 30);
+    data.cycles.push({
+      startDate: `${y}-${String(m+1).padStart(2,'0')}-23`,
+      endDate: `${y}-${String(m+1).padStart(2,'0')}-${endDay}`,
+      mood: '', symptoms: [], flow: 'Medium', note: ''
+    });
+  }
+  save();
+}
+
+function save() { localStorage.setItem('notesplus_v3', JSON.stringify(data)); }
+
+function toast(msg, col = 'var(--green)') {
+  let t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = col;
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── THEME ────────────────────────────────────────────────────
+let isDark = localStorage.getItem('np_theme') === 'dark';
+if (isDark) document.body.classList.add('dark');
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  localStorage.setItem('np_theme', isDark ? 'dark' : 'light');
+  const icon = isDark ? '☀️' : '🌙';
+  document.getElementById('themeBtn').textContent = icon;
+  const sb = document.getElementById('themeToggleSidebar');
+  if (sb) sb.textContent = (isDark ? '☀️' : '🌙') + ' ' + (isDark ? 'Light Mode' : 'Dark Mode');
+}
+// Set correct icon on load
+document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+
+// ── CAPACITOR LOCAL NOTIFICATIONS ────────────────────────────
+// Detect if running inside Capacitor (Android app) or browser
+const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+let LocalNotifications = null;
+let notifPermission = 'default';
+let alarmIntervalId = null;
+
+// Load Capacitor plugin if available
+async function initCapacitor() {
+  if (!isCapacitor) return;
+  try {
+    const cap = await import('https://unpkg.com/@capacitor/local-notifications@latest/dist/esm/index.js').catch(() => null);
+    if (cap) {
+      LocalNotifications = cap.LocalNotifications;
+    } else {
+      // Fallback: use window.Capacitor.Plugins
+      LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications || null;
+    }
+  } catch(e) {
+    LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications || null;
+  }
+}
+
+// Try to get plugin from Capacitor plugins directly (works after cap sync)
+function getLocalNotifications() {
+  return window.Capacitor?.Plugins?.LocalNotifications || LocalNotifications || null;
+}
+
+function updateNotifUI() {
+  let status = document.getElementById('notifStatus');
+  let btn = document.getElementById('notifBtn');
+  if (notifPermission === 'granted') {
+    status.textContent = '🔔 Notifications enabled — reminders will fire on time';
+    status.className = 'notif-status granted';
+    btn.textContent = '🔔';
+    document.getElementById('notifBanner').style.display = 'none';
+  } else if (notifPermission === 'denied') {
+    status.textContent = '🔕 Notifications blocked — go to phone Settings → App Permissions to allow';
+    status.className = 'notif-status denied';
+    btn.textContent = '🔕';
+    document.getElementById('notifBanner').style.display = 'none';
+  } else {
+    status.textContent = 'Tap 🔔 to enable reminder notifications';
+    status.className = 'notif-status';
+    btn.textContent = '🔔';
+    document.getElementById('notifBanner').style.display = 'flex';
+  }
+}
+
+async function requestNotifPermission() {
+  const LN = getLocalNotifications();
+
+  if (isCapacitor && LN) {
+    // Native Android notifications via Capacitor
+    try {
+      const result = await LN.requestPermissions();
+      notifPermission = result.display === 'granted' ? 'granted' : 'denied';
+      updateNotifUI();
+      if (notifPermission === 'granted') {
+        toast('Notifications enabled ✓');
+        scheduleAllReminders();
+      } else {
+        toast('Notifications blocked — allow in phone settings', 'var(--red)');
+      }
+    } catch(e) {
+      toast('Error enabling notifications', 'var(--red)');
+    }
+  } else {
+    // Browser fallback
+    if (typeof Notification === 'undefined') {
+      toast('Notifications not supported on this device', 'var(--red)');
+      return;
+    }
+    let perm = await Notification.requestPermission();
+    notifPermission = perm;
+    updateNotifUI();
+    if (perm === 'granted') {
+      toast('Notifications enabled ✓');
+      startAlarmChecker();
+    } else {
+      toast('Notifications blocked — allow in phone settings', 'var(--red)');
+    }
+  }
+}
+
+// ── CAPACITOR: Schedule all reminders as exact alarms ─────────
+async function scheduleAllReminders() {
+  const LN = getLocalNotifications();
+  if (!LN || notifPermission !== 'granted') return;
+
+  try {
+    // Cancel all existing notifications first
+    const pending = await LN.getPending();
+    if (pending.notifications && pending.notifications.length > 0) {
+      await LN.cancel({ notifications: pending.notifications });
+    }
+
+    const notifications = [];
+    const now = new Date();
+
+    data.reminders.forEach(r => {
+      if (!r.time || !r.start) return;
+      const [hh, mm] = r.time.split(':').map(Number);
+
+      if (r.repeat === 'once') {
+        const d = new Date(r.start + 'T' + r.time + ':00');
+        if (d > now) {
+          notifications.push({
+            id: Math.abs(r.id % 2147483647),
+            title: r.title || r.actual || 'Reminder',
+            body: r.msg || 'You have a reminder! ✨',
+            schedule: { at: d },
+            sound: 'default',
+            smallIcon: 'ic_stat_icon_config_sample',
+            channelId: 'notesplus_reminders'
+          });
+        }
+      } else if (r.repeat === 'daily') {
+        // Schedule next 30 occurrences
+        for (let i = 0; i < 30; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() + i);
+          d.setHours(hh, mm, 0, 0);
+          const ds = d.toISOString().split('T')[0];
+          if (d > now && (!r.end || ds <= r.end)) {
+            notifications.push({
+              id: Math.abs((r.id + i * 1000) % 2147483647),
+              title: r.title || r.actual || 'Reminder',
+              body: r.msg || 'You have a reminder! ✨',
+              schedule: { at: d },
+              sound: 'default',
+              smallIcon: 'ic_stat_icon_config_sample',
+              channelId: 'notesplus_reminders'
+            });
+          }
+        }
+      } else if (r.repeat === 'weekly') {
+        const startD = new Date(r.start + 'T00:00:00');
+        for (let i = 0; i < 12; i++) {
+          const d = new Date(startD);
+          d.setDate(startD.getDate() + i * 7);
+          d.setHours(hh, mm, 0, 0);
+          const ds = d.toISOString().split('T')[0];
+          if (d > now && (!r.end || ds <= r.end)) {
+            notifications.push({
+              id: Math.abs((r.id + i * 10000) % 2147483647),
+              title: r.title || r.actual || 'Reminder',
+              body: r.msg || 'You have a reminder! ✨',
+              schedule: { at: d },
+              sound: 'default',
+              smallIcon: 'ic_stat_icon_config_sample',
+              channelId: 'notesplus_reminders'
+            });
+          }
+        }
+      } else if (r.repeat === 'monthly') {
+        const startD = new Date(r.start + 'T00:00:00');
+        for (let i = 0; i < 6; i++) {
+          const d = new Date(startD.getFullYear(), startD.getMonth() + i, startD.getDate(), hh, mm, 0);
+          const ds = d.toISOString().split('T')[0];
+          if (d > now && (!r.end || ds <= r.end)) {
+            notifications.push({
+              id: Math.abs((r.id + i * 100000) % 2147483647),
+              title: r.title || r.actual || 'Reminder',
+              body: r.msg || 'You have a reminder! ✨',
+              schedule: { at: d },
+              sound: 'default',
+              smallIcon: 'ic_stat_icon_config_sample',
+              channelId: 'notesplus_reminders'
+            });
+          }
+        }
+      }
+    });
+
+    if (notifications.length > 0) {
+      await LN.schedule({ notifications });
+      console.log('[Notes+] Scheduled', notifications.length, 'notifications');
+    }
+  } catch(e) {
+    console.error('[Notes+] Schedule error:', e);
+  }
+}
+
+// ── BROWSER FALLBACK ALARM CHECKER ───────────────────────────
+function startAlarmChecker() {
+  if (alarmIntervalId) return;
+  alarmIntervalId = setInterval(checkAlarms, 30000);
+  checkAlarms();
+}
+
+function checkAlarms() {
+  if (notifPermission !== 'granted') return;
+  if (isCapacitor) return; // Capacitor handles this natively
+  let now = new Date();
+  let todayStr = now.toISOString().split('T')[0];
+  let hh = String(now.getHours()).padStart(2, '0');
+  let mm = String(now.getMinutes()).padStart(2, '0');
+  let nowTime = hh + ':' + mm;
+
+  data.reminders.forEach(r => {
+    if (!r.time) return;
+    let shouldFire = false;
+    let rDate = r.start;
+
+    if (r.repeat === 'once') {
+      shouldFire = (rDate === todayStr && r.time === nowTime);
+    } else if (r.repeat === 'daily') {
+      let inRange = (!r.start || todayStr >= r.start) && (!r.end || todayStr <= r.end);
+      shouldFire = (inRange && r.time === nowTime);
+    } else if (r.repeat === 'weekly') {
+      let startD = r.start ? new Date(r.start) : null;
+      let todayD = new Date(todayStr);
+      let sameWeekday = startD ? (todayD.getDay() === startD.getDay()) : true;
+      let inRange = (!r.start || todayStr >= r.start) && (!r.end || todayStr <= r.end);
+      shouldFire = (inRange && sameWeekday && r.time === nowTime);
+    } else if (r.repeat === 'monthly') {
+      let startD = r.start ? new Date(r.start) : null;
+      let todayD = new Date(todayStr);
+      let sameDay = startD ? (todayD.getDate() === startD.getDate()) : true;
+      let inRange = (!r.start || todayStr >= r.start) && (!r.end || todayStr <= r.end);
+      shouldFire = (inRange && sameDay && r.time === nowTime);
+    }
+
+    if (shouldFire) {
+      let firedKey = 'fired_' + r.id + '_' + todayStr + '_' + nowTime;
+      if (!sessionStorage.getItem(firedKey)) {
+        sessionStorage.setItem(firedKey, '1');
+        try { new Notification(r.title || r.actual, { body: r.msg || 'You have a reminder! ✨' }); } catch(_) {}
+      }
+    }
+  });
+}
+
+// ── INIT NOTIFICATIONS ────────────────────────────────────────
+async function initNotifications() {
+  await initCapacitor();
+  const LN = getLocalNotifications();
+
+  if (isCapacitor && LN) {
+    // Create notification channel for Android
+    try {
+      await LN.createChannel({
+        id: 'notesplus_reminders',
+        name: 'Notes+ Reminders',
+        importance: 5,
+        vibration: true,
+        sound: 'default'
+      });
+    } catch(e) {}
+
+    // Check current permission
+    try {
+      const perm = await LN.checkPermissions();
+      notifPermission = perm.display === 'granted' ? 'granted' : 'default';
+      updateNotifUI();
+      if (notifPermission === 'granted') scheduleAllReminders();
+    } catch(e) {}
+  } else {
+    // Browser
+    notifPermission = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+    updateNotifUI();
+    if (notifPermission === 'granted') startAlarmChecker();
+  }
+}
+
+// Run init
+initNotifications();
+
+// ── PWA INSTALL ──────────────────────────────────────────────
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  setTimeout(showInstallBanner, 1500);
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  let b = document.getElementById('pwa-install-banner');
+  if (b) b.style.display = 'none';
+  toast('Notes+ installed on home screen ✓');
+});
+
+function showInstallBanner() {
+  if (!deferredInstallPrompt) return;
+  let existing = document.getElementById('pwa-install-banner');
+  if (existing) return;
+  let banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.className = 'install-banner';
+  banner.innerHTML = `📲 <span style="flex:1">Add Notes+ to your home screen</span>
+    <button class="inst" onclick="installPWA()">Install</button>
+    <button class="close-btn" onclick="this.closest('#pwa-install-banner').style.display='none'">✕</button>`;
+  let tabs = document.querySelector('.tabs');
+  tabs.parentNode.insertBefore(banner, tabs);
+}
+
+async function installPWA() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  let { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  let b = document.getElementById('pwa-install-banner');
+  if (b) b.style.display = 'none';
+  if (outcome === 'accepted') toast('Installing Notes+… ✓');
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab, .sidebar-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`.tab[data-tab="${name}"], .sidebar-tab[data-tab="${name}"]`).forEach(t => t.classList.add('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'insights') renderInsights();
+}
+
+// ── REMINDERS ────────────────────────────────────────────────
+function addReminder() {
+  let actual = document.getElementById('r-actual').value.trim();
+  let title = document.getElementById('r-title').value.trim();
+  let msg = document.getElementById('r-msg').value.trim();
+  let start = document.getElementById('r-start').value;
+  let time = document.getElementById('r-time').value;
+  let end = document.getElementById('r-end').value;
+  let repeat = document.getElementById('r-repeat').value;
+  if (!actual) return toast('Add a reminder first', 'var(--red)');
+  data.reminders.push({ actual, title: title || actual, msg, start, time, end, repeat, id: Date.now() });
+  save();
+  ['r-actual','r-title','r-msg','r-start','r-time','r-end'].forEach(id => document.getElementById(id).value = '');
+  renderReminders();
+  scheduleAllReminders();
+  toast('Reminder saved ✓');
+  if (time && notifPermission !== 'granted') {
+    setTimeout(() => toast('Tip: Tap 🔔 to enable push notifications!', 'var(--accent)'), 3000);
+  }
+}
+
+function deleteReminder(id) {
+  data.reminders = data.reminders.filter(r => r.id !== id); save(); renderReminders(); scheduleAllReminders();
+}
+
+function renderReminders() {
+  let list = document.getElementById('reminderList');
+  if (!data.reminders.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">⏰</div>No reminders yet</div>'; return;
+  }
+  const icons = { once: '📌', daily: '🔄', weekly: '📆', monthly: '🗓️' };
+  list.innerHTML = data.reminders.slice().reverse().map(r => `
+    <div class="reminder-card">
+      <div class="r-icon">${icons[r.repeat] || '📌'}</div>
+      <div class="r-body">
+        <div class="r-alias">${r.title || r.actual}</div>
+        ${r.actual && r.actual !== r.title ? `<div class="r-badge" style="color:var(--muted);font-style:italic;">${r.actual}</div>` : ''}
+        ${r.msg ? `<div class="r-badge">${r.msg}</div>` : ''}
+        ${r.time ? `<div class="r-time">⏰ ${formatTime(r.time)}${r.start ? ' · ' + r.start : ''}</div>` : (r.start ? `<div class="r-badge">📅 ${r.start}${r.end ? ' → ' + r.end : ''}</div>` : '')}
+        ${r.time && r.end ? `<div class="r-badge">Until ${r.end}</div>` : ''}
+        <span class="r-repeat">${r.repeat.toUpperCase()}</span>
+      </div>
+      <button class="r-del" onclick="deleteReminder(${r.id})" title="Delete">✕</button>
+    </div>`).join('');
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  let [h, m] = t.split(':').map(Number);
+  let ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+// ── INSIGHTS ─────────────────────────────────────────────────
+function renderInsights() {
+  let cycles = data.cycles;
+  let totalDays = cycles.reduce((acc, c) => {
+    if (!c.endDate) return acc + 1;
+    return acc + Math.round((new Date(c.endDate) - new Date(c.startDate)) / 864e5) + 1;
+  }, 0);
+  document.getElementById('stat-tracked').textContent = totalDays;
+  if (cycles.length >= 2) {
+    let starts = cycles.map(c => new Date(c.startDate)).sort((a, b) => a - b);
+    let gaps = [];
+    for (let i = 1; i < starts.length; i++) gaps.push((starts[i] - starts[i-1]) / 864e5);
+    let avgCycle = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length);
+    document.getElementById('stat-cycle').textContent = avgCycle + 'd';
+    let last = starts[starts.length - 1];
+    let next = new Date(last.getTime() + avgCycle * 864e5);
+    document.getElementById('stat-next').textContent = next.getDate() + ' ' + next.toLocaleString('default', { month: 'short' });
+  }
+  let durations = cycles.filter(c => c.endDate && c.endDate !== c.startDate).map(c =>
+    Math.round((new Date(c.endDate) - new Date(c.startDate)) / 864e5) + 1
+  );
+  if (durations.length)
+    document.getElementById('stat-duration').textContent = Math.round(durations.reduce((a, b) => a + b) / durations.length) + 'd';
+
+  let logs = data.habitLogs || [];
+  document.getElementById('habit-total-num').textContent = logs.length;
+  let streak = 0;
+  if (logs.length) {
+    let today = new Date(); today.setHours(0, 0, 0, 0);
+    let logDates = new Set(logs.map(l => l.date));
+    for (let i = 0; i < 365; i++) {
+      let d = new Date(today.getTime() - i * 864e5);
+      let ds = d.toISOString().split('T')[0];
+      if (logDates.has(ds)) streak++;
+      else break;
+    }
+  }
+  document.getElementById('habit-streak-num').textContent = streak;
+  renderCalendar();
+  renderCycleLog();
+}
+
+// ── CALENDAR ─────────────────────────────────────────────────
+function renderCalendar() {
+  let y = calViewDate.getFullYear();
+  let m = calViewDate.getMonth();
+  let daysInMonth = new Date(y, m + 1, 0).getDate();
+  let firstDay = new Date(y, m, 1).getDay();
+  let today = new Date();
+  let marked = new Set(), predicted = new Set();
+
+  data.cycles.forEach(c => {
+    let s = new Date(c.startDate + 'T00:00:00');
+    let e = c.endDate ? new Date(c.endDate + 'T00:00:00') : new Date(s);
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+      if (d.getFullYear() === y && d.getMonth() === m) marked.add(d.getDate());
+    }
+  });
+  if (data.cycles.length >= 2) {
+    let starts = data.cycles.map(c => new Date(c.startDate + 'T00:00:00')).sort((a, b) => a - b);
+    let gaps = [];
+    for (let i = 1; i < starts.length; i++) gaps.push((starts[i] - starts[i-1]) / 864e5);
+    let avg = Math.round(gaps.reduce((a, b) => a + b) / gaps.length);
+    let lastStart = starts[starts.length - 1];
+    for (let offset = 0; offset < 2; offset++) {
+      let predStart = new Date(lastStart.getTime() + (avg * (offset + 1)) * 864e5);
+      for (let d = 0; d < 7; d++) {
+        let pd = new Date(predStart.getTime() + d * 864e5);
+        if (pd.getFullYear() === y && pd.getMonth() === m) predicted.add(pd.getDate());
+      }
+    }
+  }
+
+  let monthName = calViewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  let weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  let html = `<div class="cal-wrap"><div class="cal-header">
+    <button class="cal-nav" onclick="changeCalMonth(-1)">‹</button>
+    <h3>${monthName}</h3>
+    <button class="cal-nav" onclick="changeCalMonth(1)">›</button>
+  </div><div class="cal-grid">`;
+  weekDays.forEach(d => html += `<div class="cal-dn">${d}</div>`);
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-d empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    let cls = 'cal-d';
+    if (marked.has(d)) cls += ' marked';
+    else if (predicted.has(d)) cls += ' predicted';
+    let isToday = (d === today.getDate() && m === today.getMonth() && y === today.getFullYear());
+    if (isToday) cls += ' today';
+    html += `<div class="${cls}">${d}</div>`;
+  }
+  html += `</div><p style="font-size:11px;color:var(--muted);margin-top:8px;">
+    <span style="color:var(--accent);">●</span> Logged &nbsp;
+    <span style="color:var(--accent2);">●</span> Predicted
+  </p></div>`;
+  document.getElementById('calendarBox').innerHTML = html;
+}
+
+function changeCalMonth(dir) {
+  calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + dir, 1);
+  renderCalendar();
+}
+
+// ── CYCLE LOG ────────────────────────────────────────────────
+function renderCycleLog() {
+  let list = document.getElementById('cycleLog');
+  let sorted = [...data.cycles].sort((a, b) => new Date(b.startDate) - new Date(a.startDate)).slice(0, 5);
+  if (!sorted.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No data yet</div>'; return; }
+  list.innerHTML = sorted.map(c => {
+    let dur = c.endDate ? Math.round((new Date(c.endDate) - new Date(c.startDate)) / 864e5) + 1 : '?';
+    let sym = c.symptoms && c.symptoms.length ? c.symptoms.join(', ') : '';
+    return `<div class="note-card">
+      <div class="note-date">📅 ${c.startDate}${c.endDate ? ' → ' + c.endDate : ' · Ongoing'} · ${dur} days</div>
+      ${sym ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${sym}</div>` : ''}
+      <div class="note-text">${c.note || 'No notes'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── CYCLE MODALS ─────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  let today = new Date().toISOString().split('T')[0];
+  if (id === 'startModal') document.getElementById('m-start-date').value = today;
+  if (id === 'endModal') document.getElementById('m-end-date').value = today;
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => {
+  if (e.target === m) m.classList.remove('open');
+}));
+function toggleChip(el) { el.classList.toggle('selected'); }
+function selectOne(gid, el) {
+  document.querySelectorAll('#' + gid + ' .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function getSelected(gid) {
+  return [...document.querySelectorAll('#' + gid + ' .chip.selected')].map(c => c.textContent.trim());
+}
+
+function saveStart() {
+  let date = document.getElementById('m-start-date').value;
+  if (!date) return toast('Pick a date', 'var(--red)');
+  data.cycles.push({
+    startDate: date, endDate: '',
+    mood: getSelected('start-mood').join(', '),
+    symptoms: getSelected('start-sym'),
+    flow: getSelected('start-flow')[0] || '',
+    note: document.getElementById('m-start-note').value.trim()
+  });
+  save(); closeModal('startModal');
+  document.getElementById('m-start-note').value = '';
+  renderInsights(); toast('Cycle start logged ✓');
+}
+
+function saveEnd() {
+  let date = document.getElementById('m-end-date').value;
+  if (!date) return toast('Pick a date', 'var(--red)');
+  let note = document.getElementById('m-end-note').value.trim();
+  let c = data.cycles.slice().reverse().find(c => !c.endDate);
+  if (c) { c.endDate = date; c.endMood = getSelected('end-mood').join(', '); if (note) c.note += (c.note ? ' | ' : '') + note; }
+  else data.cycles.push({ startDate: date, endDate: date, note });
+  save(); closeModal('endModal');
+  document.getElementById('m-end-note').value = '';
+  renderInsights(); toast('Cycle end logged ✓');
+}
+
+function saveDailyNote() {
+  data.dailyLogs.push({
+    date: new Date().toISOString().split('T')[0],
+    energy: getSelected('note-energy')[0] || '',
+    mood: getSelected('note-mood').join(', '),
+    note: document.getElementById('m-daily-note').value.trim()
+  });
+  save(); closeModal('noteModal');
+  document.getElementById('m-daily-note').value = '';
+  toast('Daily log saved ✓');
+}
+
+function saveHabitLog() {
+  let today = new Date().toISOString().split('T')[0];
+  let existing = data.habitLogs.findIndex(l => l.date === today);
+  let entry = { date: today, habits: getSelected('habit-chips'), mood: getSelected('habit-mood')[0] || '' };
+  if (existing >= 0) data.habitLogs[existing] = entry;
+  else data.habitLogs.push(entry);
+  save(); closeModal('habitModal');
+  renderInsights(); toast('Habits logged ✓');
+}
+
+// ── EVENTS ───────────────────────────────────────────────────
+function addEvent() {
+  let name = document.getElementById('ev-name').value.trim();
+  let date = document.getElementById('ev-date').value;
+  let time = document.getElementById('ev-time').value;
+  let note = document.getElementById('ev-note').value.trim();
+  if (!name || !date) return toast('Name and date required', 'var(--red)');
+  data.events.push({ name, date, time, note, id: Date.now() });
+  save();
+  ['ev-name','ev-date','ev-time','ev-note'].forEach(id => document.getElementById(id).value = '');
+  renderEvents(); toast('Event added ✓');
+}
+
+function renderEvents() {
+  let list = document.getElementById('eventList');
+  let sorted = [...data.events].sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (!sorted.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>No events yet</div>'; return; }
+  let today = new Date().toISOString().split('T')[0];
+  list.innerHTML = sorted.map(e => {
+    let past = e.date < today;
+    return `<div class="event-item">
+      <div class="event-dot ${past ? '' : 'yellow'}"></div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px;${past ? 'opacity:.5' : ''}">${e.name}</div>
+        <div style="font-size:12px;color:var(--muted);">${e.date}${e.time ? ' at ' + formatTime(e.time) : ''}${e.note ? ' · ' + e.note : ''}</div>
+      </div>
+      <button onclick="deleteEvent(${e.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">✕</button>
+    </div>`;
+  }).join('');
+}
+function deleteEvent(id) { data.events = data.events.filter(e => e.id !== id); save(); renderEvents(); }
+
+// ── NOTES ────────────────────────────────────────────────────
+function addNote() {
+  let text = document.getElementById('note-text').value.trim();
+  if (!text) return;
+  data.notes.unshift({
+    date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    text, id: Date.now()
+  });
+  save(); document.getElementById('note-text').value = '';
+  renderNotes(); toast('Note saved ✓');
+}
+function renderNotes() {
+  let list = document.getElementById('noteList');
+  if (!data.notes.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>No notes yet</div>'; return; }
+  list.innerHTML = data.notes.slice(0, 30).map(n => `
+    <div class="note-card">
+      <div class="note-date">${n.date}</div>
+      <div class="note-text">${n.text}</div>
+    </div>`).join('');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+updateNotifUI();
+renderReminders();
+renderEvents();
+renderNotes();
+</script>
+
+</body>
+</html>
